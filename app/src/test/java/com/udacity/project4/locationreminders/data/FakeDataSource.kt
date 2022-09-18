@@ -30,7 +30,12 @@ class FakeDataSource : ReminderDataSource {
     }
 
     override suspend fun getReminder(id: String): Result<ReminderDTO> {
-        TODO("return the reminder with the id")
+        return if(shouldReturnError){
+            Result.Error("No Reminder found",404)
+        }else{
+            val reminder = ReminderDTO("Have a coffee","White CHocolate Mocha","StarBucks",23.432,434.2323,"1234567")
+            Result.Success(reminder)
+        }
     }
 
     override suspend fun deleteAllReminders() {

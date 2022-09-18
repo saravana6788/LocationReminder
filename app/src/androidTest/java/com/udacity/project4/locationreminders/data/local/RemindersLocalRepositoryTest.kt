@@ -59,6 +59,22 @@ class RemindersLocalRepositoryTest {
 
     }
 
+    @Test
+    fun test_getReminder_error(){
+        runBlocking {
+            remindersLocalRepository.saveReminder(reminderData)
+            val result = remindersLocalRepository.getReminders()
+            assertThat(result is Result.Success ,`is`(true))
+            val resultById = remindersLocalRepository.getReminder("12345fd")
+            assertThat(resultById is Result.Error ,`is`(true))
+            remindersLocalRepository.deleteAllReminders()
+            val resultAfterDelete = remindersLocalRepository.getReminder("12345")
+            assertThat(resultAfterDelete is Result.Error ,`is`(true))
+
+        }
+
+    }
+
 
 
 

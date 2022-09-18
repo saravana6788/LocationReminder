@@ -5,8 +5,12 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.udacity.project4.locationreminders.MainCoroutineRule
 import com.udacity.project4.locationreminders.data.FakeDataSource
+import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runBlockingTest
 import org.hamcrest.CoreMatchers.`is`
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -54,6 +58,25 @@ class RemindersListViewModelTest {
         fakeDataSource.setShouldReturnError(false)
         remindersListViewModel.loadReminders()
         assertThat(remindersListViewModel.showNoData.getOrAwaitValue(), `is`(true))
+    }
+
+    @Test
+    fun check_loading(){
+        mainCoroutineRule.runBlockingTest {
+        var reminderTestData = ReminderDTO("Have a Coffee",
+            "White Chocolate Mocha",
+            "Starbucks",
+            223.54,
+            454.34,
+            "123fdsa"
+        )
+        fakeDataSource.saveReminder(reminderTestData)
+        mainCoroutineRule.pauseDispatcher()
+            remindersListViewModel.loadReminders()
+        assertThat(remindersListViewModel.showLoading.getOrAwaitValue(), `is`(true))
+        mainCoroutineRule.resumeDispatcher()
+        assertThat(remindersListViewModel.showLoading.getOrAwaitValue(), `is`(false))
+        }
     }
 
 
