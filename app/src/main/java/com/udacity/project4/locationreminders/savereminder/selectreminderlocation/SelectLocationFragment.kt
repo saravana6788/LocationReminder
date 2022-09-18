@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.Toast.makeText
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -16,13 +17,18 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
+import kotlinx.coroutines.selects.select
 import org.koin.android.ext.android.inject
 import java.util.*
+
+
+const val FOREGROUND_PERMISSION_REQUEST_CODE = 111
 
 class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
 
@@ -79,8 +85,14 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
             _viewModel.longitude.value = poi.latLng.longitude
             _viewModel.reminderSelectedLocationStr.value = poi.name
             _viewModel.selectedPOI.value = poi
-            findNavController().popBackStack()
+
+        }else if(this::selectedMarker.isInitialized){
+            _viewModel.latitude.value = selectedMarker.position.latitude
+            _viewModel.longitude.value = selectedMarker.position.longitude
+            _viewModel.reminderSelectedLocationStr.value = selectedMarker.title
+
         }
+        findNavController().popBackStack()
 
 
     }
@@ -115,15 +127,9 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
         map = googleMap
         getCurrentLocation()
         setPOIClick()
-            //onLongClick()
+        onLongClick()
 
 
-           /* map.addMarker(
-                MarkerOptions()
-                    .position(defaultLocation)
-                    .title("Marker in Current location")
-            )
-        */
     }
 
     private fun setPOIClick(){
@@ -154,7 +160,7 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
 
 
 
-    /*private fun onLongClick(){
+    private fun onLongClick(){
         map.setOnMapLongClickListener {
             map.clear()
             val snippet = String.format(
@@ -165,7 +171,7 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
             val longClickMarker = map.addMarker(
                 MarkerOptions()
                 .position(it)
-                    .title("Dropped Pin")
+                    .title("Unknown Location")
                     .snippet(snippet)
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
             )
@@ -174,7 +180,7 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
             selectedMarker = longClickMarker
 
         }
-    }*/
+    }
 
 
 
@@ -206,22 +212,24 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
                     }
                 }
             }else{
-                requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),111)
+                requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),FOREGROUND_PERMISSION_REQUEST_CODE)
             }
         } catch (exception: SecurityException) {
-
+            Snackbar.make(this.requireView(), getString(R.string.permission_denied_explanation), Snackbar.LENGTH_LONG).show()
         }
     }
 
 
-    override fun onRequestPermissionsResult(
+    override fun     onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if(requestCode == 1111 && grantResults.isNotEmpty() && grantResults[0] ==  PackageManager.PERMISSION_GRANTED){
+        if(requestCode == FOREGROUND_PERMISSION_REQUEST_CODE && grantResults.isNotEmpty() && grantResults[0] ==  PackageManager.PERMISSION_GRANTED){
             getCurrentLocation()
+        }else{
+            Snackbar.make(this.requireView(), getString(R.string.permission_denied_explanation), Snackbar.LENGTH_LONG).show()
         }
     }
 

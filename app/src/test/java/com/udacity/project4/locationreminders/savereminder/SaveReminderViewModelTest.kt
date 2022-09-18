@@ -5,12 +5,14 @@ import android.os.Build
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.udacity.project4.locationreminders.MainCoroutineRule
 import com.udacity.project4.locationreminders.data.FakeDataSource
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.getOrAwaitValue
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.notNullValue
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -33,11 +35,15 @@ class SaveReminderViewModelTest {
     @get:Rule()
     var instantTaskExecutorRule = InstantTaskExecutorRule()
 
+    @get:Rule()
+    var mainCoroutineRule = MainCoroutineRule()
+
 
     @After
     fun tearDown() {
         stopKoin()
     }
+
 
     //TODO: provide testing to the SaveReminderView and its live data objects
 
@@ -79,6 +85,23 @@ class SaveReminderViewModelTest {
         val validationStatus = saveReminderViewModel.validateAndSaveReminder(reminderDataWithInvalidLocation)
         assertEquals(false,validationStatus)
         assertThat(saveReminderViewModel.showSnackBarInt.value, notNullValue())
+    }
+
+
+    @Test
+    fun check_loading(){
+        var reminderTestData = ReminderDataItem("Have a Coffee",
+            "White Chocolate Mocha",
+            "Starbucks",
+            223.54,
+            454.34,
+            "123"
+        )
+        mainCoroutineRule.pauseDispatcher()
+        saveReminderViewModel.saveReminder(reminderTestData)
+        assertThat(saveReminderViewModel.showLoading.getOrAwaitValue(), `is`(true))
+        mainCoroutineRule.resumeDispatcher()
+        assertThat(saveReminderViewModel.showLoading.getOrAwaitValue(), `is`(false))
     }
 
 
