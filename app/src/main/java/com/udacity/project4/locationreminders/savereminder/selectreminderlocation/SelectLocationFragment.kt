@@ -128,7 +128,7 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
         getCurrentLocation()
         setPOIClick()
         onLongClick()
-
+        map.setMapStyle(MapStyleOptions.loadRawResourceStyle(requireContext(),R.raw.map_style))
 
     }
 

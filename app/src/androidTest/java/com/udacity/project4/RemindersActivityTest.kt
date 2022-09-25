@@ -1,16 +1,16 @@
 package com.udacity.project4
 
+
 import android.app.Activity
 import android.app.Application
-import android.app.PendingIntent.getActivity
+import android.view.WindowManager
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.Root
+import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
-import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
@@ -24,8 +24,10 @@ import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.util.DataBindingIdlingResource
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.not
-import org.hamcrest.core.AllOf.allOf
+import org.hamcrest.Description
+import org.hamcrest.TypeSafeMatcher
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,6 +37,7 @@ import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.AutoCloseKoinTest
 import org.koin.test.get
+
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
@@ -108,11 +111,13 @@ class RemindersActivityTest :
             repository.saveReminder(reminder)
         }
 
-        ActivityScenario.launch(RemindersActivity::class.java)
-
+        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
+         val activity = getActivity(activityScenario)
         onView(withText(reminder.title)).check(matches(isDisplayed()))
         onView(withText(reminder.description)).check(matches(isDisplayed()))
         onView(withText(reminder.location)).check(matches(isDisplayed()))
+        onView(withText(com.udacity.project4.R.string.reminder_saved)).inRoot(ToastMatcher())
+        .check(matches(isDisplayed()))
 
     }
 
@@ -153,7 +158,54 @@ class RemindersActivityTest :
     }
 
 
+    @Test
+    fun oneReminderActivityTest_success_toast_for_() = runBlocking {
+        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
+        val activity = getActivity(activityScenario)
+
+        onView(withId(R.id.addReminderFAB)).perform(click())
+        onView(withId(R.id.reminderTitle)).perform(replaceText("Title"))
+        onView(withId(R.id.reminderDescription)).perform(replaceText("Description"))
+        onView(withId(R.id.selectLocation)).perform(click())
+        onView(withId(R.id.select_map_fragment)).perform(longClick())
+        onView(withId(R.id.save_button)).perform(click())
+        onView(withId(R.id.saveReminder)).perform(click())
+        onView(withText(R.string.reminder_saved)).inRoot(withDecorView(not(`is`(activity?.window?.decorView))))
+            .check(
+                matches(
+                    isDisplayed()
+                )
+            )
+        onView(withText("Title")).check(matches(isDisplayed()))
+
+        runBlocking {
+            delay(3000)
+        }
+    }
 
 
+
+
+
+}
+
+
+
+public class ToastMatcher: TypeSafeMatcher<Root>() {
+    override fun describeTo(description: Description?) {
+        description?.appendText("in Toast")
+    }
+
+    override fun matchesSafely(item: Root?): Boolean {
+        val type = item?.windowLayoutParams?.get()?.type
+        if(type == WindowManager.LayoutParams.TYPE_TOAST){
+            val windowToken = item?.decorView?.windowToken
+            val appToken = item?.decorView?.applicationWindowToken
+            if(windowToken == appToken){
+                return true
+            }
+        }
+return false
+    }
 
 }
