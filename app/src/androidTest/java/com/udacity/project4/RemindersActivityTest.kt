@@ -116,9 +116,6 @@ class RemindersActivityTest :
         onView(withText(reminder.title)).check(matches(isDisplayed()))
         onView(withText(reminder.description)).check(matches(isDisplayed()))
         onView(withText(reminder.location)).check(matches(isDisplayed()))
-        onView(withText(com.udacity.project4.R.string.reminder_saved)).inRoot(ToastMatcher())
-        .check(matches(isDisplayed()))
-
     }
 
 
@@ -184,28 +181,8 @@ class RemindersActivityTest :
     }
 
 
-
-
-
 }
 
 
 
-public class ToastMatcher: TypeSafeMatcher<Root>() {
-    override fun describeTo(description: Description?) {
-        description?.appendText("in Toast")
-    }
 
-    override fun matchesSafely(item: Root?): Boolean {
-        val type = item?.windowLayoutParams?.get()?.type
-        if(type == WindowManager.LayoutParams.TYPE_TOAST){
-            val windowToken = item?.decorView?.windowToken
-            val appToken = item?.decorView?.applicationWindowToken
-            if(windowToken == appToken){
-                return true
-            }
-        }
-return false
-    }
-
-}
