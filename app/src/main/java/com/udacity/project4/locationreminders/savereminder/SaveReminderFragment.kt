@@ -25,14 +25,12 @@ import com.udacity.project4.locationreminders.geofence.GeofenceBroadcastReceiver
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
-import java.util.jar.Manifest
 
 class SaveReminderFragment : BaseFragment() {
     companion object{
         private const val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 121
         private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 122
         private const val TAG = "SaveReminderFragment"
-        const val GEOFENCE_RADIUS_IN_METERS = 100f
         private const val REQUEST_TURN_DEVICE_LOCATION_ON = 29
     }
     //Get the view model this time as a single to be shared with the another fragment
@@ -51,7 +49,7 @@ class SaveReminderFragment : BaseFragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding =
             DataBindingUtil.inflate(inflater, R.layout.fragment_save_reminder, container, false)
 
@@ -121,6 +119,14 @@ class SaveReminderFragment : BaseFragment() {
     }
 
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_TURN_DEVICE_LOCATION_ON) {
+            checkDeviceLocationSettingsAndStartGeofence()
+        }
+    }
+
+
     @TargetApi(29)
     private fun requestForegroundAndBackgroundLocationPermissions() {
         if (foregroundAndBackgroundLocationPermissionApproved())
@@ -138,6 +144,7 @@ class SaveReminderFragment : BaseFragment() {
             permissionsArray,
             resultCode
         )
+        //checkDeviceLocationSettingsAndStartGeofence()
     }
 
 
@@ -172,8 +179,8 @@ class SaveReminderFragment : BaseFragment() {
         locationSettingsResponseTask.addOnFailureListener { exception ->
             if (exception is ResolvableApiException){
                 try {
-                    exception.startResolutionForResult(requireActivity(),
-                        23)
+                    //exception.startResolutionForResult(requireActivity(),REQUEST_TURN_DEVICE_LOCATION_ON)
+                    startIntentSenderForResult(exception.resolution.intentSender, REQUEST_TURN_DEVICE_LOCATION_ON, null, 0, 0, 0, null)
                 } catch (sendEx: IntentSender.SendIntentException) {
                     Log.d(TAG, "Unable to get Location Settings: " + sendEx.message)
                 }
